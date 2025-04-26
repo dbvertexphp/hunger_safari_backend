@@ -1,18 +1,15 @@
 const express = require("express");
-const { DeleteCategory, GetSingleCategoryByName, GetAllCategoriesAdmin } = require("../controllers/categoryControllers.js");
 const protect = require("../middleware/authMiddleware.js");
-const { createSubcategory, updateSubCategory, getAllSubCategoriesAdminpage, getSubCategoryByCategoryId, getAllSubCategories, getSubCategoryByCategoryIdInAdmin } = require("../controllers/subCategoryController.js");
+const Authorization = require("../middleware/Authorization.middleware.js");
+const { addSubCategory, getAllSubCategories, getSubCategoryById, updateSubCategory, deleteSubCategory } = require("../controllers/SubCategoryController");
 
 const subCategoryRoutes = express.Router();
 
-subCategoryRoutes.route("/createSubCategory").post(createSubcategory);
-subCategoryRoutes.route("/UpdateSubCategory").post(protect, updateSubCategory);
-subCategoryRoutes.route("/getAllSubCategories").get(getAllSubCategories);
-subCategoryRoutes.route("/GetAllCategoriesAdmin").get(GetAllCategoriesAdmin);
-subCategoryRoutes.route("/GetAllSubCategoriesAdminpage").post(getAllSubCategoriesAdminpage);
-subCategoryRoutes.route("/GetCategoryByName").post(GetSingleCategoryByName);
-subCategoryRoutes.route("/GetSubCategoryByCategoryId").post(getSubCategoryByCategoryId);
-subCategoryRoutes.route("/getSubCategoryByCategoryIdInAdmin/:category_id").get(protect, getSubCategoryByCategoryIdInAdmin);
-subCategoryRoutes.route("/DeleteCategory").post(protect, DeleteCategory);
+
+subCategoryRoutes.route("/add").post(protect, Authorization(["admin"]), addSubCategory);
+subCategoryRoutes.route("/all").get(protect, Authorization(["user", "admin"]), getAllSubCategories)
+subCategoryRoutes.route("/:id").get(protect, Authorization(["user", "admin"]), getSubCategoryById)
+subCategoryRoutes.route("/update/:id").put(protect, Authorization(["admin"]), updateSubCategory)
+subCategoryRoutes.route("/delete/:id").delete(protect, Authorization(["admin"]), deleteSubCategory)
 
 module.exports = { subCategoryRoutes };

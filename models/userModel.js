@@ -10,7 +10,7 @@ const userSchema = mongoose.Schema(
     },
     mobile: { type: String, unique: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, enum: ["user", "supplier", "both", "admin"] },
+    role: { type: String, required: true, enum: ["user", "admin"] },
     otp: { type: String },
     otp_verified: { type: Number, default: 0 },
     firebase_token: { type: String, default: "dummy_token" },
@@ -18,14 +18,19 @@ const userSchema = mongoose.Schema(
     profile_pic: {
       type: String,
     },
+    current_token: {
+      type: String,
+      default: null,
+    },
     address: { type: String },
     datetime: {
       type: String,
-      default: () => moment().tz("Asia/Kolkata").format("YYYY-MMM-DD hh:mm:ss A"),
+      default: () =>
+        moment().tz("Asia/Kolkata").format("YYYY-MMM-DD hh:mm:ss A"),
     },
     timestamp: {
       type: Date,
-      default: () => moment().tz("Asia/Kolkata").toDate()
+      default: () => moment().tz("Asia/Kolkata").toDate(),
     },
   },
   { timestamps: true }
@@ -97,15 +102,19 @@ userSchema.statics.findById = function (userId) {
 userSchema.pre("save", function (next) {
   // Capitalize the first letter of first_name
   if (this.isModified("first_name")) {
-    this.first_name = this.first_name.charAt(0).toUpperCase() + this.first_name.slice(1);
+    this.first_name =
+      this.first_name.charAt(0).toUpperCase() + this.first_name.slice(1);
   }
   // Capitalize the first letter of each interest
   if (this.isModified("interest")) {
-    this.interest = this.interest.map((interest) => interest.charAt(0).toUpperCase() + interest.slice(1));
+    this.interest = this.interest.map(
+      (interest) => interest.charAt(0).toUpperCase() + interest.slice(1)
+    );
   }
   // Capitalize the first letter of about_me
   if (this.isModified("about_me")) {
-    this.about_me = this.about_me.charAt(0).toUpperCase() + this.about_me.slice(1);
+    this.about_me =
+      this.about_me.charAt(0).toUpperCase() + this.about_me.slice(1);
   }
   // Capitalize the first letter of address
   if (this.isModified("address")) {
@@ -116,8 +125,14 @@ userSchema.pre("save", function (next) {
 
 const AdminDashboard = mongoose.model("AdminDashboard", adminDashboardSchema);
 const User = mongoose.model("User", userSchema);
-const WebNotification = mongoose.model("WebsiteNotificationToken", websiteNotificationToken);
-const NotificationMessages = mongoose.model("NotificationMessage", NotificationMessage);
+const WebNotification = mongoose.model(
+  "WebsiteNotificationToken",
+  websiteNotificationToken
+);
+const NotificationMessages = mongoose.model(
+  "NotificationMessage",
+  NotificationMessage
+);
 
 module.exports = {
   User,

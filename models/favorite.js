@@ -8,9 +8,9 @@ const favoriteSchema = new Schema(
       ref: "User",
       required: true,
     },
-    product_id: {
-      type: Schema.Types.ObjectId,
-      ref: "Product",
+    restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
       required: true,
     },
   },
