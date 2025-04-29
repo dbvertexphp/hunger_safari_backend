@@ -25,6 +25,11 @@ const restaurantSchema = new mongoose.Schema({
   closing_time: {
     type: String,   // Example: "10:00 PM"
   },
+	tax_rate: {
+		type: Number,
+		required: true,
+		default: 10, // tax rate in percentage, e.g., 10 for 10%
+	},
   rating: {
     type: Number,
     default: 0,     // Default rating can be 0
@@ -47,11 +52,11 @@ const restaurantSchema = new mongoose.Schema({
   },
   reviews: [    // <<=== Added this new field
     {
-      user: {
+      user_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",  // assuming you have a User model
       },
-      comment: {
+      review: {
         type: String,
       },
       rating: {

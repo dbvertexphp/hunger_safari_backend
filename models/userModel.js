@@ -10,7 +10,12 @@ const userSchema = mongoose.Schema(
     },
     mobile: { type: String, unique: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, enum: ["user", "admin"] },
+    role: { type: String, required: true, enum: ["user", "admin", "subAdmin"] },
+		restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+      default: null,
+    },
     otp: { type: String },
     otp_verified: { type: Number, default: 0 },
     firebase_token: { type: String, default: "dummy_token" },
@@ -18,6 +23,7 @@ const userSchema = mongoose.Schema(
     profile_pic: {
       type: String,
     },
+		plain_password: { type: String, default: null },
     current_token: {
       type: String,
       default: null,

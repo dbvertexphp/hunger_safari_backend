@@ -39,6 +39,14 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+	taxAmount: {
+    type: Number,
+    required: true
+  },
+  totalAmount: {
+    type: Number,
+    required: true
+  },
   shippingAddress: {
     fullName: { type: String, required: true },
     mobileNumber: { type: String, required: true },
@@ -51,12 +59,12 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['cod', 'online'],
+    enum: ['COD', 'Online'],
     required: true,
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed'],
+    enum: ['Pending', 'Paid', 'Failed'],
     default: 'pending',
   },
   razorpayOrderId: {

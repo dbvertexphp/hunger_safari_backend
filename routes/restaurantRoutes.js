@@ -1,7 +1,7 @@
 const express = require("express");
 const protect = require("../middleware/authMiddleware.js");
 const Authorization = require("../middleware/Authorization.middleware.js");
-const { addRestaurant, getAllRestaurants, getRestaurantById, updateRestaurant, deleteRestaurant } = require("../controllers/resturantController.js");
+const { addRestaurant, getAllRestaurants, getRestaurantById, updateRestaurant, deleteRestaurant, updateRestaurantRating, getRestaurantReviews } = require("../controllers/resturantController.js");
 
 const resturantRoutes = express.Router();
 
@@ -10,5 +10,8 @@ resturantRoutes.route("/all").get(protect, Authorization(["user", "admin"]), get
 resturantRoutes.route("/:id").get(protect, Authorization(["user", "admin"]), getRestaurantById);
 resturantRoutes.route("/update/:id").put(protect, Authorization(["admin"]), updateRestaurant);
 resturantRoutes.route("/delete/:id").delete(protect, Authorization(["admin"]), deleteRestaurant);
+resturantRoutes.route("/update-rating").put(protect, Authorization(["user"]), updateRestaurantRating);
+resturantRoutes.route("/reviews/:restaurant_id").get(protect, Authorization(["user", "admin"]), getRestaurantReviews);
+
 
 module.exports = { resturantRoutes };

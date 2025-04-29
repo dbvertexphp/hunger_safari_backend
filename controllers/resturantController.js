@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Restaurant = require("../models/Restaurant");
 const upload = require("../middleware/uploadMiddleware.js");
+const { User } = require("../models/userModel.js");
 const fs = require("fs");
 const path = require("path");
 
@@ -216,10 +217,85 @@ const deleteRestaurant = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Restaurant deleted successfully" });
 });
 
+const updateRestaurantRating = asyncHandler(async (req, res) => {
+	const {restaurant_id, rating, review } = req.body;
+	const user_id = req.headers.userID;
+	// Find the restaurant
+	const restaurant = await Restaurant.findById(restaurant_id);
+  
+	if (!restaurant) {
+	  return res.status(404).json({ message: "Restaurant not found" });
+	}
+  
+	// Check if the user has already reviewed the restaurant
+	const existingReview = restaurant.reviews.find(
+	  (rev) => String(rev.user_id) === String(user_id)
+	);
+  
+	if (existingReview) {
+	  // If a review already exists, update it
+	  existingReview.rating = rating;
+	  existingReview.review = review;
+	  existingReview.createdAt = Date.now();
+	} else {
+	  // If no review exists, add a new one
+	  restaurant.reviews.push({
+		user_id,
+		rating,
+		review,
+	  });
+	}
+  
+	// Recalculate the average rating
+	const totalRatings = restaurant.reviews.length;
+	const sumRatings = restaurant.reviews.reduce((sum, rev) => sum + rev.rating, 0);
+	restaurant.ratings = sumRatings / totalRatings;
+  
+	// Save the updated restaurant
+	await restaurant.save();
+  
+	res.status(200).json({
+	  message: "Review and rating updated successfully",
+	  restaurant,
+	});
+  });
+
+  const getRestaurantReviews = asyncHandler(async (req, res) => {
+	const { restaurant_id } = req.params;
+  
+	// Find the restaurant by id and populate the reviews with user data (full_name)
+	const restaurant = await Restaurant.findById(restaurant_id)
+	  .populate({
+		path: 'reviews.user_id',  // Populate the 'user_id' field in reviews with user data
+		select: 'full_name', // Only fetch the user's full_name
+	  });
+  
+	if (!restaurant) {
+	  return res.status(404).json({ message: "Restaurant not found" });
+	}
+  
+	// Process the reviews to include user names
+	const reviewsWithUserNames = restaurant.reviews.map((review) => ({
+	  review: review.review,
+	  rating: review.rating,
+	  createdAt: review.createdAt,
+	  userName: review.user_id ? review.user_id.full_name : "Anonymous", // Correct field to 'full_name'
+	}));
+  
+	res.status(200).json({
+	  reviews: reviewsWithUserNames,
+	});
+  });
+  
+  
+  
+
 module.exports = {
   addRestaurant,
   getAllRestaurants,
   getRestaurantById,
   updateRestaurant,
   deleteRestaurant,
+  updateRestaurantRating,
+  getRestaurantReviews,
 };

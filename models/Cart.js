@@ -24,6 +24,10 @@ const cartSchema = new mongoose.Schema({
         required: true,
         default: 1,
       },
+			price: {
+				type: Number,
+				required: true, // Make sure to save the price
+			},
     }
   ],
 }, { timestamps: true });

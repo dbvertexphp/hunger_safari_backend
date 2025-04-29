@@ -15,7 +15,8 @@ const { subCategoryRoutes } = require("./routes/subCategoryRoutes.js");
 const { menuItemsRoutes } = require("./routes/menuItemRoutes.js");
 const { cartRoutes } = require("./routes/cartRoutes.js");
 const { favoriteRoutes } = require("./routes/favoriteRoutes.js");
-
+const { paymentRoutes } = require("./routes/paymentRoutes.js");
+const { adminRoutes } = require("./routes/adminRoutes.js");
 
 connectDB();
 const app = express();
@@ -45,12 +46,14 @@ const corsOptions = {
 
 //***********************  Define Routes************************* */
 app.use("/api/user", userRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/resturant", resturantRoutes);
 app.use("/api/subCategory", subCategoryRoutes);
 app.use("/api/menuItem", menuItemsRoutes);
 app.use("/api", favoriteRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/payment", paymentRoutes);
   // --------------------------deploymentssssss------------------------------
 
 if (process.env.NODE_ENV == "production") {

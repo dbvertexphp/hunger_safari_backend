@@ -13,7 +13,11 @@ const {
 	forgetPassword,
 	ChangePassword,
 	logoutUser,
-	updateProfile
+	updateProfile,
+	getOrderHistory,
+	createSubAdmin,
+	getAllSubAdmins,
+	deleteSubAdmin
 } = require("../controllers/userControllers.js");
 
 userRoutes.route("/register").post(registerUser);
@@ -25,4 +29,14 @@ userRoutes.route("/forgetPassword").put(forgetPassword);
 userRoutes.route("/ChangePassword").put(protect, ChangePassword);
 userRoutes.route("/logoutUser").get(protect, logoutUser);
 userRoutes.route("/updateProfile").put(protect, updateProfile);
+userRoutes.route("/order-history").get(protect, Authorization(["user"]), getOrderHistory);
+
+
+
+// Admin Routes
+
+userRoutes.route("/createSubAdmin").post(protect, Authorization(["admin"]), createSubAdmin);
+userRoutes.route("/getAllSubAdmins").get(protect, Authorization(["admin"]), getAllSubAdmins);
+userRoutes.route("/deleteSubAdmin/:id").delete(protect, Authorization(["admin"]), deleteSubAdmin);
+
 module.exports = { userRoutes };

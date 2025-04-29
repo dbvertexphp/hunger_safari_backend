@@ -15,7 +15,7 @@ const sendEmail = require("../utils/emailSender");
 const argon2 = require("argon2");
 const { generateToken, blacklistToken } = require("../config/generateToken.js");
 const { User, NotificationMessages, AdminDashboard, WebNotification } = require("../models/userModel.js");
-
+const Order = require("../models/Order")
 
 function generateOTP() {
 	const min = 1000; // Minimum 4-digit number
@@ -159,7 +159,84 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
 
 
-  const loginUser = asyncHandler(async (req, res, next) => {
+//   const loginUser = asyncHandler(async (req, res, next) => {
+// 	const { email, mobile, password, firebase_token } = req.body;
+  
+// 	// Ensure that either email or mobile and password are provided
+// 	if ((!email && !mobile) || !password) {
+// 	  return next(new ErrorHandler("Email or Mobile and Password are required.", 400));
+// 	}
+  
+// 	// Find the user by email or mobile
+// 	const user = await User.findOne({
+// 	  $or: [{ email: email || null }, { mobile: mobile || null }],
+// 	});
+  
+// 	if (!user) {
+// 	  return next(new ErrorHandler("Invalid email or mobile number.", 401));
+// 	}
+  
+// 	// Check if the password matches
+// 	const isMatch = await user.matchPassword(password);
+// 	if (!isMatch) {
+// 	  return next(new ErrorHandler("Invalid password.", 401));
+// 	}
+  
+// 	// Handle OTP verification if not verified
+// 	if (user.otp_verified === 0) {
+// 	  const otp = generateOTP();
+// 	  await User.updateOne({ _id: user._id }, { $set: { otp } });
+  
+// 	  return res.status(400).json({
+// 		otp,
+// 		message: "OTP not verified.",
+// 		status: false,
+// 	  });
+// 	}
+  
+// 	// Save the firebase_token if provided (to track devices)
+// 	if (firebase_token) {
+// 	  user.firebase_token = firebase_token;
+// 	}
+  
+// 	// Generate a new JWT token for the session
+// 	const token = generateToken(user._id, user.role);
+  
+// 	// Invalidate the previous session (single login functionality)
+// 	user.current_token = token;
+// 	await user.save();
+  
+// 	// Optionally, set the token as a cookie for the client
+// 	res.setHeader(
+// 	  "Set-Cookie",
+// 	  cookie.serialize("Websitetoken", token, {
+// 		httpOnly: true,
+// 		path: "/",
+// 		maxAge: 30 * 24 * 60 * 60, // Token expires after 30 days
+// 	  })
+// 	);
+  
+// 	// Create a user data object to return
+// 	const userData = {
+// 	  _id: user._id,
+// 	  full_name: user.full_name,
+// 	  email: user.email,
+// 	  mobile: user.mobile,
+// 	  role: user.role,
+// 	  profile_pic: user.profile_pic || null,
+// 	  token, // The new token to use for subsequent requests
+// 	};
+  
+// 	// Send the response with the user data and token
+// 	res.status(200).json({
+// 	  user: userData,
+// 	  status: true,
+// 	});
+//   });
+  
+  
+
+const loginUser = asyncHandler(async (req, res, next) => {
 	const { email, mobile, password, firebase_token } = req.body;
   
 	// Ensure that either email or mobile and password are provided
@@ -182,8 +259,8 @@ const registerUser = asyncHandler(async (req, res, next) => {
 	  return next(new ErrorHandler("Invalid password.", 401));
 	}
   
-	// Handle OTP verification if not verified
-	if (user.otp_verified === 0) {
+	// Skip OTP verification if role is 'admin' or 'subAdmin'
+	if (user.role !== 'admin' && user.role !== 'subAdmin' && user.otp_verified === 0) {
 	  const otp = generateOTP();
 	  await User.updateOne({ _id: user._id }, { $set: { otp } });
   
@@ -234,7 +311,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
 	});
   });
   
-  
+
   const verifyOtp = asyncHandler(async (req, res) => {
 	const { mobile, email, otp } = req.body;
   
@@ -634,7 +711,86 @@ const registerUser = asyncHandler(async (req, res, next) => {
 	});
   });
 
+  const getOrderHistory = asyncHandler(async (req, res) => {
+	const user_id = req.headers.userID;;
   
+	// Fetch all orders for the user
+	const orders = await Order.find({ user_id }).populate('items.menuItem_id');
+  
+	if (!orders || orders.length === 0) {
+	  return res.status(404).json({ message: "No orders found" });
+	}
+  
+	// Return orders with some user-friendly details
+	res.status(200).json({
+	  success: true,
+	  orders,
+	});
+  });
+  
+  const createSubAdmin = async (req, res) => {
+	try {
+	  const { full_name, email, mobile, password, restaurant_id } = req.body;
+  
+	  const subAdmin = await User.create({
+		full_name,
+		email,
+		mobile,
+		password,
+		plain_password: password,  // Save plain password
+		role: 'subAdmin',
+		restaurant_id,
+	  });
+  
+	  res.status(201).json({
+		success: true,
+		subAdmin,
+	  });
+	} catch (error) {
+	  res.status(500).json({ success: false, message: error.message });
+	}
+  };
+
+  const getAllSubAdmins = async (req, res) => {
+	try {
+	  const subAdmins = await User.find({ role: "subAdmin" })
+		.populate("restaurant_id", "name") // only bring restaurant name
+		.select("full_name email mobile plain_password restaurant_id"); // bring plain password
+  
+	  res.status(200).json({
+		success: true,
+		subAdmins,
+	  });
+	} catch (error) {
+	  res.status(500).json({ success: false, message: error.message });
+	}
+  };
+  
+  const deleteSubAdmin = async (req, res) => {
+	try {
+	  const { id } = req.params; // SubAdmin _id from URL params
+  
+	  // First, find the user
+	  const user = await User.findById(id);
+  
+	  if (!user) {
+		return res.status(404).json({ success: false, message: "SubAdmin not found" });
+	  }
+  
+	  if (user.role !== "subAdmin") {
+		return res.status(400).json({ success: false, message: "User is not a subAdmin" });
+	  }
+  
+	  // Delete the SubAdmin
+	  await User.deleteOne({ _id: id });
+  
+	  res.status(200).json({ success: true, message: "SubAdmin deleted successfully" });
+	} catch (error) {
+	  res.status(500).json({ success: false, message: error.message });
+	}
+  };
+  
+
   module.exports = {
 	registerUser,
 	loginUser,
@@ -645,4 +801,8 @@ const registerUser = asyncHandler(async (req, res, next) => {
 	ChangePassword,
 	logoutUser,
 	updateProfile,
+	getOrderHistory,
+	createSubAdmin,
+	getAllSubAdmins,
+	deleteSubAdmin
   }
