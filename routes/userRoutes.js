@@ -17,7 +17,8 @@ const {
 	getOrderHistory,
 	createSubAdmin,
 	getAllSubAdmins,
-	deleteSubAdmin
+	deleteSubAdmin,
+	updateSubAdmin
 } = require("../controllers/userControllers.js");
 
 userRoutes.route("/register").post(registerUser);
@@ -36,6 +37,7 @@ userRoutes.route("/order-history").get(protect, Authorization(["user"]), getOrde
 // Admin Routes
 
 userRoutes.route("/createSubAdmin").post(protect, Authorization(["admin"]), createSubAdmin);
+userRoutes.route("/updateSubAdmin/:id").put(protect, Authorization(["admin"]), updateSubAdmin);
 userRoutes.route("/getAllSubAdmins").get(protect, Authorization(["admin"]), getAllSubAdmins);
 userRoutes.route("/deleteSubAdmin/:id").delete(protect, Authorization(["admin"]), deleteSubAdmin);
 

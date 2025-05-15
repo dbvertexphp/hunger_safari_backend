@@ -728,28 +728,134 @@ const loginUser = asyncHandler(async (req, res, next) => {
 	});
   });
   
-  const createSubAdmin = async (req, res) => {
-	try {
-	  const { full_name, email, mobile, password, restaurant_id } = req.body;
+//   const createSubAdmin = async (req, res) => {
+// 	try {
+// 	  const { full_name, email, mobile, password, restaurant_id } = req.body;
   
-	  const subAdmin = await User.create({
-		full_name,
-		email,
-		mobile,
-		password,
-		plain_password: password,  // Save plain password
-		role: 'subAdmin',
-		restaurant_id,
-	  });
+// 	  const subAdmin = await User.create({
+// 		full_name,
+// 		email,
+// 		mobile,
+// 		password,
+// 		plain_password: password,  // Save plain password
+// 		role: 'subAdmin',
+// 		restaurant_id,
+// 	  });
   
-	  res.status(201).json({
-		success: true,
-		subAdmin,
-	  });
-	} catch (error) {
-	  res.status(500).json({ success: false, message: error.message });
-	}
-  };
+// 	  res.status(201).json({
+// 		success: true,
+// 		subAdmin,
+// 	  });
+// 	} catch (error) {
+// 	  res.status(500).json({ success: false, message: error.message });
+// 	}
+//   };
+
+const createSubAdmin = async (req, res) => {
+  try {
+    const { full_name, email, mobile, password, restaurant_id } = req.body;
+
+    // Check for existing email
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists",
+      });
+    }
+
+    // Check for existing mobile
+    const mobileExists = await User.findOne({ mobile });
+    if (mobileExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile number already exists",
+      });
+    }
+
+    // Create sub-admin
+    const subAdmin = await User.create({
+      full_name,
+      email,
+      mobile,
+      password,
+      plain_password: password,
+      role: 'subAdmin',
+      restaurant_id,
+    });
+
+    res.status(201).json({
+      success: true,
+      subAdmin,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateSubAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, full_name, mobile, restaurant_id } = req.body;
+
+    // Check for duplicate email
+    const emailExists = await User.findOne({
+      email,
+      _id: { $ne: id }, // exclude current user
+    });
+
+    if (emailExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use by another user",
+      });
+    }
+
+    // Check for duplicate mobile
+    const mobileExists = await User.findOne({
+      mobile,
+      _id: { $ne: id },
+    });
+
+    if (mobileExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile number already in use by another user",
+      });
+    }
+
+    // Perform the update
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        email,
+        full_name,
+        mobile,
+        restaurant_id,
+        updatedAt: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update SubAdmin Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
   const getAllSubAdmins = async (req, res) => {
 	try {
@@ -804,5 +910,6 @@ const loginUser = asyncHandler(async (req, res, next) => {
 	getOrderHistory,
 	createSubAdmin,
 	getAllSubAdmins,
-	deleteSubAdmin
+	deleteSubAdmin,
+	updateSubAdmin
   }

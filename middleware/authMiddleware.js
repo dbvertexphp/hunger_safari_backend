@@ -25,7 +25,7 @@ const protect = asyncHandler(async (req, res, next) => {
         });
       }
 
-			console.log("token", token);
+			// console.log("token", token);
       // Decode the token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       // console.log("Decoded token:", decoded);  // Debugging line
