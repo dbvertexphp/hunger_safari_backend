@@ -464,7 +464,7 @@ const getAllRestaurantsWithDetails = asyncHandler(async (req, res) => {
     }
   });
 
-  const restaurants = await Restaurant.find().populate("category_id", "name");
+  const restaurants = await Restaurant.find().populate("category_id", "name").sort({createdAt : -1});
 
   const restaurantData = await Promise.all(
     restaurants.map(async (restaurant) => {

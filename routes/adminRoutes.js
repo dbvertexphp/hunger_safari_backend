@@ -6,7 +6,8 @@ const verifyToken = require('../middleware/verifytoken.js');
 const {
 	getAllUsers,
 	getAllSubAdminsWithRestaurant,
-	adminAllDashboardCount
+	adminAllDashboardCount,
+	updateUserStatus
 } = require("../controllers/adminController.js");
 
 const adminRoutes = express.Router();
@@ -15,5 +16,5 @@ const adminRoutes = express.Router();
 adminRoutes.route("/getAllUsers").get(protect, Authorization(["admin"]), getAllUsers);
 adminRoutes.route("/getAllSubAdminsWithRestaurant").get(protect, Authorization(["admin"]), getAllSubAdminsWithRestaurant);
 adminRoutes.route("/adminAllDashboardCount").get(protect, Authorization(["admin"]), adminAllDashboardCount);
-
+adminRoutes.route("/updateUserStatus").patch(protect, Authorization(["admin"]), updateUserStatus);
 module.exports = { adminRoutes };

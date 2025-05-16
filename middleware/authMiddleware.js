@@ -42,6 +42,13 @@ const protect = asyncHandler(async (req, res, next) => {
         });
       }
 
+			if (!user.active) {
+        return res.status(403).json({
+          message: "Admin has disabled your account. Please contact admin.",
+          status: false,
+        });
+      }
+
       if (user.current_token !== token) {
         return res.status(401).json({
           message: "Session expired or logged in on another device",

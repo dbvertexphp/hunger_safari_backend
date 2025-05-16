@@ -30,6 +30,7 @@ const restaurantSchema = new mongoose.Schema({
 		required: true,
 		default: 10, // tax rate in percentage, e.g., 10 for 10%
 	},
+	active: { type: Boolean, default: true },
   rating: {
     type: Number,
     default: 0,     // Default rating can be 0

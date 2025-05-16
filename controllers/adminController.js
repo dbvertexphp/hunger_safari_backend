@@ -101,9 +101,37 @@ const adminAllDashboardCount = async (req, res) => {
 	}
   };
 
+const updateUserStatus = async (req, res, next) => {
+  const { userId, active } = req.body;
+  console.log("req", req.body);
+
+  if (!userId || typeof active !== "boolean") {
+    return next(new ErrorHandler("User ID and active status are required.", 400));
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return next(new ErrorHandler("User not found.", 404));
+  }
+
+  user.active = active;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: `User ${active ? "enabled" : "disabled"} successfully.`,
+    user: {
+      _id: user._id,
+      full_name: user.full_name,
+      active: user.active,
+    },
+  });
+};
 
   module.exports = {
 	getAllUsers,
 	getAllSubAdminsWithRestaurant,
 	adminAllDashboardCount,
+	updateUserStatus,
   }
