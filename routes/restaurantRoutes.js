@@ -10,7 +10,7 @@ resturantRoutes.route("/all").get(protect, Authorization(["user", "admin"]), get
 resturantRoutes.route("/allAdmin").get(protect, Authorization(["admin"]), getAllRestaurantsAdmin);
 resturantRoutes.route("/getAllRestaurantsWithDetails").get(protect, Authorization(["admin"]), getAllRestaurantsWithDetails);
 resturantRoutes.route("/:id").get(protect, Authorization(["user", "admin"]), getRestaurantById);
-resturantRoutes.route("/update/:id").put(protect, Authorization(["admin"]), updateRestaurant);
+resturantRoutes.route("/update/:id").put(protect, Authorization(["admin", "subAdmin"]), updateRestaurant);
 resturantRoutes.route("/delete/:id").delete(protect, Authorization(["admin"]), deleteRestaurant);
 resturantRoutes.route("/update-rating").put(protect, Authorization(["user"]), updateRestaurantRating);
 resturantRoutes.route("/reviews/:restaurant_id").get(protect, Authorization(["user", "admin"]), getRestaurantReviews);

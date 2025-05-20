@@ -253,7 +253,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("Invalid email or mobile number.", 401));
   }
 
-  // Check if user is active (skip check for admin and subAdmin)
+  // Check if user is active (skip check for admin)
   if (user.role !== 'admin' && !user.active) {
     return next(new ErrorHandler("Admin has disabled your account. Please contact admin.", 403));
   }

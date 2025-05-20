@@ -38,6 +38,17 @@ const getAllSubCategories = asyncHandler(async (req, res) => {
   res.status(200).json(subCategories);
 });
 
+const getUnassignedSubCategories = asyncHandler(async (req, res) => {
+  const subCategories = await SubCategory.find({
+    $or: [
+      { restaurant_id: { $exists: false } },
+      { restaurant_id: null }
+    ]
+  });
+
+  res.status(200).json(subCategories);
+});
+
 // 📌 Get SubCategory by ID
 const getSubCategoryById = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -115,4 +126,5 @@ module.exports = {
   getSubCategoryById,
   updateSubCategory,
   deleteSubCategory,
+	getUnassignedSubCategories,
 };

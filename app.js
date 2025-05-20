@@ -17,6 +17,7 @@ const { cartRoutes } = require("./routes/cartRoutes.js");
 const { favoriteRoutes } = require("./routes/favoriteRoutes.js");
 const { paymentRoutes } = require("./routes/paymentRoutes.js");
 const { adminRoutes } = require("./routes/adminRoutes.js");
+const { subadminRoutes } = require("./routes/subadminRoutes.js");
 
 connectDB();
 const app = express();
@@ -47,6 +48,7 @@ const corsOptions = {
 //***********************  Define Routes************************* */
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/subadmin", subadminRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/resturant", resturantRoutes);
 app.use("/api/subCategory", subCategoryRoutes);

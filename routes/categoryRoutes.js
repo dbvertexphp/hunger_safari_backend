@@ -13,7 +13,7 @@ const categoryRoutes = express.Router();
 // routes for categories
 
 categoryRoutes.route("/addCategory").post(protect, Authorization(["admin"]), addCategory);
-categoryRoutes.route("/getAllCategories").get(protect, Authorization(["user", "admin"]), getAllCategories)
+categoryRoutes.route("/getAllCategories").get(protect, Authorization(["user", "admin", "subAdmin"]), getAllCategories)
 categoryRoutes.route("/getCategoryById/:id").get(protect, Authorization(["user", "admin"]), getCategoryById)
 categoryRoutes.route("/updateCategoryById/:id").put(protect, Authorization(["admin"]), updateCategoryById)
 categoryRoutes.route("/deleteCategoryById/:id").delete(protect, Authorization(["admin"]), deleteCategoryById)

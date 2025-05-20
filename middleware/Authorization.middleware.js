@@ -5,7 +5,7 @@ const Authorization = (roles) => {
       next();
     } else {
       return res.status(401).send({
-        msg: "Un-Authorized, You are not authorized to access this route.",
+        message: "Un-Authorized, You are not authorized to access this route.",
       });
     }
   };
