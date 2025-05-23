@@ -1,6 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const upload = require("../middleware/uploadMiddleware.js");
 const MenuItem = require("../models/MenuItem");
+const SubCategory = require("../models/SubCategory");
+const { User } = require("../models/userModel.js");
 const fs = require("fs");
 
 // 📌 Add Menu Item
@@ -35,9 +37,77 @@ const addMenuItem = asyncHandler(async (req, res, next) => {
 
 // 📌 Get All Menu Items
 const getAllMenuItems = asyncHandler(async (req, res) => {
+	const user_id = req.headers.userID;
   const menuItems = await MenuItem.find().populate("subCategory_id", "name");
   res.status(200).json(menuItems);
 });
+
+// const getMenuItemsByUser = asyncHandler(async (req, res) => {
+//   const user_id = req.headers.userID;
+
+//   // Find the user
+//   const user = await User.findById(user_id);
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found" });
+//   }
+
+//   // Ensure the user has a restaurant_id
+//   if (!user.restaurant_id) {
+//     return res.status(400).json({ message: "User is not associated with a restaurant" });
+//   }
+
+//   // Find all subcategory IDs belonging to the user's restaurant
+//   const subCategories = await SubCategory.find(
+//     { restaurant_id: user.restaurant_id },
+//     { _id: 1 }
+//   );
+
+//   const subCategoryIds = subCategories.map(sub => sub._id);
+
+//   // Fetch menu items linked to those subcategory IDs
+//   const menuItems = await MenuItem.find({
+//     subCategory_id: { $in: subCategoryIds }
+//   }).sort({createdAt : -1});
+
+//   res.status(200).json(menuItems);
+// });
+
+const getMenuItemsByUser = asyncHandler(async (req, res) => {
+  const user_id = req.headers.userID;
+
+  // Find the user
+  const user = await User.findById(user_id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Ensure the user has a restaurant_id
+  if (!user.restaurant_id) {
+    return res.status(400).json({ message: "User is not associated with a restaurant" });
+  }
+
+  // Find all subcategory IDs belonging to the user's restaurant
+  const subCategories = await SubCategory.find(
+    { restaurant_id: user.restaurant_id },
+    { _id: 1 }
+  );
+
+  const subCategoryIds = subCategories.map(sub => sub._id);
+
+  // Fetch menu items linked to those subcategory IDs and populate subcategory name
+  const menuItems = await MenuItem.find({
+    subCategory_id: { $in: subCategoryIds }
+  })
+    .populate({
+      path: 'subCategory_id',
+      select: 'name' // Only get subcategory name
+    })
+    .sort({ createdAt: -1 });
+
+  res.status(200).json(menuItems);
+});
+
+
 
 // 📌 Get Menu Item by ID
 const getMenuItemById = asyncHandler(async (req, res) => {
@@ -118,4 +188,5 @@ module.exports = {
   getMenuItemById,
   updateMenuItem,
   deleteMenuItem,
+	getMenuItemsByUser
 };

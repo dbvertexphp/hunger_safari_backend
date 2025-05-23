@@ -1,5 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const SubCategory = require("../models/SubCategory");
+const { User } = require("../models/userModel.js");
+const MenuItem = require("../models/MenuItem");
 const upload = require("../middleware/uploadMiddleware.js");
 const fs = require("fs");
 const path = require("path");
@@ -39,15 +41,66 @@ const getAllSubCategories = asyncHandler(async (req, res) => {
 });
 
 const getUnassignedSubCategories = asyncHandler(async (req, res) => {
-  const subCategories = await SubCategory.find({
-    $or: [
-      { restaurant_id: { $exists: false } },
-      { restaurant_id: null }
-    ]
-  });
+  const user_id = req.headers.userID;
+
+  // Find the user
+  const user = await User.findById(user_id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Ensure the user has a restaurant_id
+  if (!user.restaurant_id) {
+    return res.status(400).json({ message: "User is not associated with a restaurant" });
+  }
+
+  // Fetch subcategories for the restaurant and include related menu items
+  const subCategories = await SubCategory.aggregate([
+    {
+      $match: {
+        restaurant_id: user.restaurant_id
+      }
+    },
+    {
+      $lookup: {
+        from: "menuitems", // actual collection name in MongoDB
+        localField: "_id",
+        foreignField: "subCategory_id",
+        as: "menuItems"
+      }
+    }
+  ]).sort({createdAt : -1});;
 
   res.status(200).json(subCategories);
 });
+
+const getSubCategoriesSubAdmin = asyncHandler(async (req, res) => {
+  const user_id = req.headers.userID;
+
+  // Find the user
+  const user = await User.findById(user_id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Ensure the user has a restaurant_id
+  if (!user.restaurant_id) {
+    return res.status(400).json({ message: "User is not associated with a restaurant" });
+  }
+
+  // Fetch subcategories for the restaurant and include related menu items
+  const subCategories = await SubCategory.aggregate([
+    {
+      $match: {
+        restaurant_id: user.restaurant_id
+      }
+    },
+  ]).sort({createdAt : -1});
+
+  res.status(200).json(subCategories);
+});
+
+
 
 // 📌 Get SubCategory by ID
 const getSubCategoryById = asyncHandler(async (req, res) => {
@@ -101,6 +154,26 @@ const updateSubCategory = asyncHandler(async (req, res, next) => {
   });
 });
 
+// // 📌 Delete SubCategory
+// const deleteSubCategory = asyncHandler(async (req, res) => {
+//   const { id } = req.params;
+//   const subCategory = await SubCategory.findById(id);
+
+//   if (!subCategory) {
+//     return res.status(404).json({ message: "SubCategory not found" });
+//   }
+
+//   // 🧹 Delete image from server
+//   if (subCategory.image && fs.existsSync(subCategory.image)) {
+//     fs.unlinkSync(subCategory.image);
+//   }
+
+//   await subCategory.deleteOne();
+
+//   res.status(200).json({ message: "SubCategory deleted successfully" });
+// });
+
+
 // 📌 Delete SubCategory
 const deleteSubCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -115,9 +188,13 @@ const deleteSubCategory = asyncHandler(async (req, res) => {
     fs.unlinkSync(subCategory.image);
   }
 
+  // 🧹 Delete related MenuItems
+  await MenuItem.deleteMany({ subcategory_id: subCategory._id });
+
+  // 🗑️ Delete the SubCategory itself
   await subCategory.deleteOne();
 
-  res.status(200).json({ message: "SubCategory deleted successfully" });
+  res.status(200).json({ message: "SubCategory and related MenuItems deleted successfully" });
 });
 
 module.exports = {
@@ -127,4 +204,5 @@ module.exports = {
   updateSubCategory,
   deleteSubCategory,
 	getUnassignedSubCategories,
+	getSubCategoriesSubAdmin
 };

@@ -7,7 +7,9 @@ const {
 	getAllUsers,
 	getAllSubAdminsWithRestaurant,
 	adminAllDashboardCount,
-	updateUserStatus
+	updateUserStatus,
+	adminSubDashboardCount,
+	getOrdersByRestaurant
 } = require("../controllers/adminController.js");
 
 const adminRoutes = express.Router();
@@ -16,5 +18,7 @@ const adminRoutes = express.Router();
 adminRoutes.route("/getAllUsers").get(protect, Authorization(["admin"]), getAllUsers);
 adminRoutes.route("/getAllSubAdminsWithRestaurant").get(protect, Authorization(["admin"]), getAllSubAdminsWithRestaurant);
 adminRoutes.route("/adminAllDashboardCount").get(protect, Authorization(["admin", "subAdmin"]), adminAllDashboardCount);
+adminRoutes.route("/adminSubDashboardCount").get(protect, Authorization(["subAdmin"]), adminSubDashboardCount);
+adminRoutes.route("/getOrdersByRestaurant").get(protect, Authorization(["subAdmin"]), getOrdersByRestaurant);
 adminRoutes.route("/updateUserStatus").patch(protect, Authorization(["admin"]), updateUserStatus);
 module.exports = { adminRoutes };
