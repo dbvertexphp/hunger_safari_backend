@@ -266,9 +266,6 @@ const updateCODOrderStatus = async (req, res) => {
     const order = await Order.findById(orderId);
 
     if (!order) return res.status(404).json({ message: 'Order not found' });
-    if (order.paymentMethod !== 'COD') {
-      return res.status(400).json({ message: 'Only COD orders can be updated via this API' });
-    }
 
     order.orderStatus = orderStatus;
     await order.save();
