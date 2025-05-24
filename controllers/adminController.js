@@ -235,11 +235,83 @@ const getOrdersByRestaurant = async (req, res) => {
   }
 };
 
+const getOnlineOrdersByRestaurant = async (req, res) => {
+  try {
+    const subAdminId = req.headers.userID;
+    const user = await User.findById(subAdminId);
+
+    if (!user || !user.restaurant_id) {
+      return res.status(404).json({ message: "Restaurant not found for user" });
+    }
+
+    const restaurantId = user.restaurant_id;
+
+    const orders = await Order.find({ restaurant_id: restaurantId, paymentMethod : "Online" }).sort({createdAt: -1})
+      .populate({ path: "user_id", select: "full_name email mobile" }) // Populates user name
+      .populate({ path: "items.menuItem_id", select: "name" }); // Populates each menu item name
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+
+const updateCODOrderStatus = async (req, res) => {
+  const { orderId } = req.params;
+  const { orderStatus } = req.body;
+
+  try {
+    const order = await Order.findById(orderId);
+
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.paymentMethod !== 'COD') {
+      return res.status(400).json({ message: 'Only COD orders can be updated via this API' });
+    }
+
+    order.orderStatus = orderStatus;
+    await order.save();
+
+    res.status(200).json({ message: 'Order status updated successfully', order });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+const updateCODPaymentStatus = async (req, res) => {
+  const { orderId } = req.params;
+	console.log("oo", req.params)
+  const { paymentStatus } = req.body;
+  console.log("rrr", req.body);
+  try {
+    const order = await Order.findById(orderId);
+   console.log("ddd", order);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.paymentMethod !== 'COD') {
+      return res.status(400).json({ message: 'Only COD orders can be updated via this API' });
+    }
+
+    order.paymentStatus = paymentStatus;
+    await order.save();
+
+    res.status(200).json({ message: 'Payment status updated successfully', order });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+
 module.exports = {
   getAllUsers,
   getAllSubAdminsWithRestaurant,
   adminAllDashboardCount,
   updateUserStatus,
   adminSubDashboardCount,
-  getOrdersByRestaurant
+  getOrdersByRestaurant,
+	getOnlineOrdersByRestaurant,
+	updateCODOrderStatus,
+	updateCODPaymentStatus
 };

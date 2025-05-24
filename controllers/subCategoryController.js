@@ -7,6 +7,33 @@ const fs = require("fs");
 const path = require("path");
 
 // 📌 Add SubCategory
+// const addSubCategory = asyncHandler(async (req, res, next) => {
+//   req.uploadPath = "uploads/subcategory";
+
+//   upload.single("image")(req, res, async (err) => {
+//     if (err) {
+//       return next(new ErrorHandler(err.message, 400));
+//     }
+
+//     try {
+//       const { name, restaurant_id } = req.body;
+//       const image = req.file ? `${req.uploadPath}/${req.file.filename}` : null;
+
+//       const newSubCategory = new SubCategory({
+//         name,
+//         restaurant_id,
+//         image,
+//       });
+
+//       await newSubCategory.save();
+
+//       res.status(201).json({ message: "SubCategory added successfully", subCategory: newSubCategory });
+//     } catch (error) {
+//       res.status(400).json({ message: error.message });
+//     }
+//   });
+// });
+
 const addSubCategory = asyncHandler(async (req, res, next) => {
   req.uploadPath = "uploads/subcategory";
 
@@ -17,10 +44,30 @@ const addSubCategory = asyncHandler(async (req, res, next) => {
 
     try {
       const { name, restaurant_id } = req.body;
+      const trimmedName = name?.trim();
+
+      // Normalize: remove spaces and convert to lowercase
+      const normalized = trimmedName.replace(/\s+/g, '').toLowerCase();
+
+      // Block if name is some form of "and"
+      if (normalized === "and") {
+        return res.status(400).json({ message: "Invalid subcategory name." });
+      }
+
+      // Check for existing subcategory with same name and restaurant
+      const existing = await SubCategory.findOne({ 
+        name: new RegExp(`^${trimmedName}$`, 'i'), // case-insensitive exact match
+        restaurant_id 
+      });
+
+      if (existing) {
+        return res.status(400).json({ message: "SubCategory with this name already exists for this restaurant." });
+      }
+
       const image = req.file ? `${req.uploadPath}/${req.file.filename}` : null;
 
       const newSubCategory = new SubCategory({
-        name,
+        name: trimmedName,
         restaurant_id,
         image,
       });
@@ -33,6 +80,9 @@ const addSubCategory = asyncHandler(async (req, res, next) => {
     }
   });
 });
+
+
+
 
 // 📌 Get All SubCategories
 const getAllSubCategories = asyncHandler(async (req, res) => {
@@ -155,26 +205,6 @@ const updateSubCategory = asyncHandler(async (req, res, next) => {
 });
 
 // // 📌 Delete SubCategory
-// const deleteSubCategory = asyncHandler(async (req, res) => {
-//   const { id } = req.params;
-//   const subCategory = await SubCategory.findById(id);
-
-//   if (!subCategory) {
-//     return res.status(404).json({ message: "SubCategory not found" });
-//   }
-
-//   // 🧹 Delete image from server
-//   if (subCategory.image && fs.existsSync(subCategory.image)) {
-//     fs.unlinkSync(subCategory.image);
-//   }
-
-//   await subCategory.deleteOne();
-
-//   res.status(200).json({ message: "SubCategory deleted successfully" });
-// });
-
-
-// 📌 Delete SubCategory
 const deleteSubCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const subCategory = await SubCategory.findById(id);
@@ -188,14 +218,34 @@ const deleteSubCategory = asyncHandler(async (req, res) => {
     fs.unlinkSync(subCategory.image);
   }
 
-  // 🧹 Delete related MenuItems
-  await MenuItem.deleteMany({ subcategory_id: subCategory._id });
-
-  // 🗑️ Delete the SubCategory itself
   await subCategory.deleteOne();
 
-  res.status(200).json({ message: "SubCategory and related MenuItems deleted successfully" });
+  res.status(200).json({ message: "SubCategory deleted successfully" });
 });
+
+
+// 📌 Delete SubCategory
+// const deleteSubCategory = asyncHandler(async (req, res) => {
+//   const { id } = req.params;
+//   const subCategory = await SubCategory.findById(id);
+
+//   if (!subCategory) {
+//     return res.status(404).json({ message: "SubCategory not found" });
+//   }
+
+//   // 🧹 Delete image from server
+//   if (subCategory.image && fs.existsSync(subCategory.image)) {
+//     fs.unlinkSync(subCategory.image);
+//   }
+
+//   // 🧹 Delete related MenuItems
+//   await MenuItem.deleteMany({ subcategory_id: subCategory._id });
+
+//   // 🗑️ Delete the SubCategory itself
+//   await subCategory.deleteOne();
+
+//   res.status(200).json({ message: "SubCategory and related MenuItems deleted successfully" });
+// });
 
 module.exports = {
   addSubCategory,
